@@ -54,6 +54,9 @@ class PyCrawlerX:
         Returns:
             str: The cleaned name of the file or directory.
         """
+        if os.path.isfile(os.path.join(self.path_, dir_or_file)):
+            # Remove the extension of the file and return the name.
+            return os.path.splitext(os.path.basename(dir_or_file))[0]
         return os.path.basename(dir_or_file)
 
     def __execute_file(self, file_path) -> None:
