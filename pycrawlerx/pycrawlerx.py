@@ -1,13 +1,28 @@
 """
 PyCrawlerX - A Python Path Crawling Tool for Windows and Linux.
 """
+import re
 import os
 import sys
 
 class PyCrawlerX:
     """
     PyCrawlerX - A Python Path Crawling Tool for Windows and Linux.
+
+    Note:
+        You can Ignore the directories, files and extensions by adding them in the
+        IGNORE_DIRS, IGNORE_FILES and IGNORE_EXTENSIONS list.
     """
+    IGNORE_DIRS = []
+    IGNORE_FILES = []
+    # IGNORE_EXTENSIONS = []
+    IGNORE_DIRS_PATTERN = []
+
+    __IGNORE_DIRS = ['env', 'venv', '__pycache__'] + IGNORE_DIRS
+    __IGNORE_FILES = ['__init__.py', 'setup.py'] + IGNORE_FILES
+    __IGNORE_DIRS_PATTERN = [] + IGNORE_DIRS_PATTERN
+    # __IGNORE_EXTENSIONS = ['.pyc', '.pyo', '.txt'] + IGNORE_EXTENSIONS
+
     def __init__(self):
         """
         Initialize the class.
@@ -17,19 +32,6 @@ class PyCrawlerX:
         self.clean_content = {}
         self.curr_files_count = 0
         self.curr_dirs_count = 0
-
-    def __pycrawlerx_logo(self) -> None:
-        """
-        Print the PyCrawlerX Logo.
-        """
-        print(
-            """
-░▒█▀▀█░█░░█░▒█▀▀▄░█▀▀▄░█▀▀▄░█░░░█░█░░█▀▀░█▀▀▄░▀▄░▄▀
-░▒█▄▄█░█▄▄█░▒█░░░░█▄▄▀░█▄▄█░▀▄█▄▀░█░░█▀▀░█▄▄▀░░▒█░░
-░▒█░░░░▄▄▄▀░▒█▄▄▀░▀░▀▀░▀░░▀░░▀░▀░░▀▀░▀▀▀░▀░▀▀░▄▀▒▀▄
-                                    - By @activare
-            """
-        )
 
     def __is_dir_of_file(self, dir_or_file) -> None:
         """
@@ -44,6 +46,21 @@ class PyCrawlerX:
         self.curr_files_count += os.path.isfile(dir_or_file)
         self.curr_dirs_count += os.path.isdir(dir_or_file)
 
+    def __is_valid_pattern(self, dir_or_file) -> bool:
+        """
+        Check if the given directory or file has a valid pattern.
+
+        Args:
+            dir_or_file (str): The path of the file or directory.
+
+        Returns:
+            bool: True if the given directory or file has a valid pattern.
+        """
+        for pattern in self.__IGNORE_DIRS_PATTERN:
+            if re.match(pattern, dir_or_file):
+                return False
+        return True
+
     def __clean_name(self, dir_or_file) -> str:
         """
         Clean the name of the file or directory.
@@ -56,8 +73,9 @@ class PyCrawlerX:
         """
         if os.path.isfile(os.path.join(self.path_, dir_or_file)):
             # Remove the extension of the file and return the name.
-            return os.path.splitext(os.path.basename(dir_or_file))[0]
-        return os.path.basename(dir_or_file)
+            __file_name = os.path.splitext(os.path.basename(dir_or_file))[0]
+            return str(__file_name).replace("_", " ").capitalize()
+        return str(os.path.basename(dir_or_file)).replace("_", " ").capitalize()
 
     def __execute_file(self, file_path) -> None:
         """
@@ -69,10 +87,10 @@ class PyCrawlerX:
         Returns:
             None
         """
-        user_input = input("Do you want to execute this file? (y/n): ")
+        user_input = input("Do you want to execute this file? (y/n): ").lower()
         if user_input == "y":
             os.system(f"python {file_path}")
-            print("File executed.")
+            print("File executed successfully.")
         self.__crawl(os.path.dirname(file_path))
 
     def __execute_all_files(self) -> None:
@@ -82,7 +100,7 @@ class PyCrawlerX:
         Returns:
             None
         """
-        user_input = input("Do you want to execute all the files in this directory? (y/n): ")
+        user_input = input("Do you want to execute the above files? (y/n): ").lower()
         if user_input == "y":
             for file in os.listdir(self.path_):
                 file_path = os.path.join(self.path_, file)
@@ -110,10 +128,11 @@ class PyCrawlerX:
             if len(os.listdir(self.path_)) > 0:
                 for dir_or_file in os.listdir(self.path_):
                     __inc_num += 1
-                    self.__is_dir_of_file(os.path.join(self.path_, dir_or_file))
                     __clean_name = self.__clean_name(dir_or_file)
-                    self.content[__clean_name] = os.path.join(self.path_, dir_or_file)
-                    self.clean_content[__inc_num] = __clean_name
+                    if self.__is_valid_pattern(__clean_name):
+                        self.__is_dir_of_file(os.path.join(self.path_, dir_or_file))
+                        self.content[__clean_name] = os.path.join(self.path_, dir_or_file)
+                        self.clean_content[__inc_num] = __clean_name
 
                 if self.curr_files_count >= 2:
                     self.clean_content[len(self.clean_content) + 1] = "All Files"
@@ -123,6 +142,7 @@ class PyCrawlerX:
             else:
                 __message = "\nThis directory is empty.\n"
                 self.clean_content[len(self.clean_content) + 1] = "Back"
+                self.clean_content[len(self.clean_content) + 1] = "Exit"
                 self.__cli_menu(__message)
         elif os.path.isfile(self.path_):
             self.__execute_file(self.path_)
@@ -182,6 +202,5 @@ class PyCrawlerX:
         Returns:
             None
         """
-        self.__pycrawlerx_logo()
         self.__crawl(path_ = folder_path)
         self.__cli_menu()
