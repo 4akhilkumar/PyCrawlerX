@@ -129,7 +129,7 @@ class PyCrawlerX:
                 for dir_or_file in os.listdir(self.path_):
                     __inc_num += 1
                     __clean_name = self.__clean_name(dir_or_file)
-                    if self.__is_valid_pattern(__clean_name):
+                    if self.__is_valid_pattern(dir_or_file):
                         self.__is_dir_of_file(os.path.join(self.path_, dir_or_file))
                         self.content[__clean_name] = os.path.join(self.path_, dir_or_file)
                         self.clean_content[__inc_num] = __clean_name
