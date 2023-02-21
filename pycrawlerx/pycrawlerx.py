@@ -13,15 +13,11 @@ class PyCrawlerX:
         You can Ignore the directories, files and extensions by adding them in the
         IGNORE_DIRS, IGNORE_FILES and IGNORE_EXTENSIONS list.
     """
-    IGNORE_DIRS = []
-    IGNORE_FILES = []
-    # IGNORE_EXTENSIONS = []
-    IGNORE_DIRS_PATTERN = []
 
-    __IGNORE_DIRS = ['env', 'venv', '__pycache__'] + IGNORE_DIRS
-    __IGNORE_FILES = ['__init__.py', 'setup.py'] + IGNORE_FILES
-    __IGNORE_DIRS_PATTERN = [] + IGNORE_DIRS_PATTERN
-    # __IGNORE_EXTENSIONS = ['.pyc', '.pyo', '.txt'] + IGNORE_EXTENSIONS
+    __IGNORE_DIRS = ['env', 'venv', '__pycache__']
+    __IGNORE_FILES = ['__init__.py', 'setup.py']
+    __IGNORE_DIRS_PATTERN = [r'\d{8}_\d{6}']
+    __IGNORE_EXTENSIONS = ['.pyc', '.pyo', '.txt']
 
     def __init__(self):
         """
@@ -33,7 +29,7 @@ class PyCrawlerX:
         self.curr_files_count = 0
         self.curr_dirs_count = 0
 
-    def __is_dir_of_file(self, dir_or_file) -> None:
+    def __is_dir_of_file(self, dir_or_file: str) -> None:
         """
         Check if the given path is a file.
 
@@ -46,22 +42,27 @@ class PyCrawlerX:
         self.curr_files_count += os.path.isfile(dir_or_file)
         self.curr_dirs_count += os.path.isdir(dir_or_file)
 
-    def __is_valid_pattern(self, dir_or_file) -> bool:
+    def __is_valid_content(self, dir_or_file: str) -> bool:
         """
-        Check if the given directory or file has a valid pattern.
+        Check if the given directory or file is valid.
 
         Args:
             dir_or_file (str): The path of the file or directory.
 
         Returns:
-            bool: True if the given directory or file has a valid pattern.
+            bool: True if the given directory or file is valid, False otherwise.
         """
+        if dir_or_file in self.__IGNORE_DIRS or dir_or_file in self.__IGNORE_FILES:
+            return False
+        for each_externsion in self.__IGNORE_EXTENSIONS:
+            if dir_or_file.endswith(each_externsion):
+                return False
         for pattern in self.__IGNORE_DIRS_PATTERN:
             if re.match(pattern, dir_or_file):
                 return False
         return True
 
-    def __clean_name(self, dir_or_file) -> str:
+    def __clean_name(self, dir_or_file: str) -> str:
         """
         Clean the name of the file or directory.
 
@@ -77,7 +78,7 @@ class PyCrawlerX:
             return str(__file_name).replace("_", " ").capitalize()
         return str(os.path.basename(dir_or_file)).replace("_", " ").capitalize()
 
-    def __execute_file(self, file_path) -> None:
+    def __execute_file(self, file_path: str) -> None:
         """
         Execute the file.
 
@@ -108,7 +109,7 @@ class PyCrawlerX:
                     os.system(f"python {file_path}")
             self.__crawl(self.path_)
 
-    def __crawl(self, path_) -> None:
+    def __crawl(self, path_: str) -> None:
         """
         Crawl the path and list out the content in that path.
         Content can be files or directories.
@@ -119,17 +120,17 @@ class PyCrawlerX:
         Returns:
             None
         """
-        self.path_ = path_
         __inc_num = 0
+        self.path_ = path_
         self.curr_files_count = 0
         self.content = {}
         self.clean_content = {}
         if os.path.isdir(self.path_):
             if len(os.listdir(self.path_)) > 0:
                 for dir_or_file in os.listdir(self.path_):
-                    __inc_num += 1
-                    __clean_name = self.__clean_name(dir_or_file)
-                    if self.__is_valid_pattern(dir_or_file):
+                    if self.__is_valid_content(dir_or_file):
+                        __inc_num += 1
+                        __clean_name = self.__clean_name(dir_or_file)
                         self.__is_dir_of_file(os.path.join(self.path_, dir_or_file))
                         self.content[__clean_name] = os.path.join(self.path_, dir_or_file)
                         self.clean_content[__inc_num] = __clean_name
@@ -192,7 +193,7 @@ class PyCrawlerX:
         for key, value in key_value.items():
             os.environ[key] = value
 
-    def run_pycrawlerx(self, folder_path) -> None:
+    def run_pycrawlerx(self, folder_path: str) -> None:
         """
         Run the PyCrawlerX.
 
