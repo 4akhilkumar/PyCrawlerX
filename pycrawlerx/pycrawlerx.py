@@ -90,7 +90,7 @@ class PyCrawlerX:
         """
         user_input = input("Do you want to execute this file? (y/n): ").lower()
         if user_input == "y":
-            os.system(f"python {file_path}")
+            os.system(f'python "{file_path}"')
             print("File executed successfully.")
         self.__crawl(os.path.dirname(file_path))
 
@@ -106,7 +106,7 @@ class PyCrawlerX:
             for file in os.listdir(self.path_):
                 file_path = os.path.join(self.path_, file)
                 if os.path.isfile(file_path):
-                    os.system(f"python {file_path}")
+                    os.system(f'python "{file_path}"')
             self.__crawl(self.path_)
 
     def __crawl(self, path_: str) -> None:
