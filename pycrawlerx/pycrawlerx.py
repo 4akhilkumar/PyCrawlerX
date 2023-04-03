@@ -1,13 +1,14 @@
 """
-PyCrawlerX - A Python Path Crawling Tool for Windows and Linux.
+PyCrawlerX - A Python Path Crawling Tool for Windows
 """
 import re
 import os
 import sys
+import subprocess
 
 class PyCrawlerX:
     """
-    PyCrawlerX - A Python Path Crawling Tool for Windows and Linux.
+    PyCrawlerX - A Python Path Crawling Tool for Windows
 
     Note:
         You can Ignore the directories, files and extensions by adding them in the
@@ -78,6 +79,21 @@ class PyCrawlerX:
             return str(__file_name).replace("_", " ").capitalize()
         return str(os.path.basename(dir_or_file)).replace("_", " ").capitalize()
 
+    def __clean_file_name_ind(self, file_path: str) -> str:
+        """
+        Clean the name of the file only.
+
+        Args:
+            file_path (str): The path of the file.
+
+        Returns:
+            str: The cleaned name of the file.
+        """
+        if os.path.isfile(file_path):
+            # Remove the extension of the file and return the name.
+            __file_name = os.path.splitext(os.path.basename(file_path))[0]
+            return str(__file_name).replace("_", " ").capitalize()
+
     def __execute_file(self, file_path: str) -> None:
         """
         Execute the file.
@@ -90,8 +106,13 @@ class PyCrawlerX:
         """
         user_input = input("Do you want to execute this file? (y/n): ").lower()
         if user_input == "y":
-            os.system(f'python "{file_path}"')
-            print("File executed successfully.")
+            clean_filename = self.__clean_file_name_ind(file_path)
+            print(f"Executing {clean_filename}...")
+            try:
+                subprocess.run(f'python "{file_path}"', shell=True, check=True)
+                print("File executed successfully.")
+            except subprocess.CalledProcessError as error_msg:
+                print("Error: ", error_msg)
         self.__crawl(os.path.dirname(file_path))
 
     def __execute_all_files(self) -> None:
@@ -106,7 +127,13 @@ class PyCrawlerX:
             for file in os.listdir(self.path_):
                 file_path = os.path.join(self.path_, file)
                 if os.path.isfile(file_path):
-                    os.system(f'python "{file_path}"')
+                    clean_filename = self.__clean_file_name_ind(file_path)
+                    print(f"Executing {clean_filename}...")
+                    try:
+                        subprocess.run(f'python "{file_path}"', shell=True, check=True)
+                        print("File executed successfully.")
+                    except subprocess.CalledProcessError as error_msg:
+                        print("Error: ", error_msg)
             self.__crawl(self.path_)
 
     def __crawl(self, path_: str) -> None:
